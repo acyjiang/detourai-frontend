@@ -1,3 +1,5 @@
+import "./styles.css";
+
 import {
   Box,
   Button,
@@ -19,6 +21,7 @@ import {
   Marker,
   Autocomplete,
   DirectionsRenderer,
+  InfoWindow,
 } from "@react-google-maps/api";
 import { useRef, useState } from "react";
 
@@ -39,9 +42,10 @@ function App() {
   const [waypoints, setWaypoints] = useState([]);
   const [optimize, setOptimize] = useState(true);
   const [markers, setMarkers] = useState([
-    { lat: 48.8584, lng: 2.2945 },
+    { lat: 48.8605, lng: 2.2945 },
     { lat: 48.8595, lng: 2.2945 },
   ]);
+  const [selectedMarker, setSelectedMarker] = useState(-1);
 
   /** @type React.MutableRefObject<HTMLInputElement> */
   const originRef = useRef();
@@ -85,6 +89,24 @@ function App() {
   function handleMarkerClick(index) {
     return () => {
       console.log(index);
+      console.log(markers);
+      console.log(waypoints);
+      setSelectedMarker(index);
+    };
+  }
+
+  function handleAddWaypoint(index) {
+    return () => {
+      setWaypoints([...waypoints, markers[index]]);
+      setSelectedMarker(-1);
+    };
+  }
+
+  function handleRemoveWaypoint(index) {
+    return () => {
+      var arr = [...waypoints];
+      arr.splice(index, 1);
+      setWaypoints(arr);
     };
   }
 
@@ -110,6 +132,8 @@ function App() {
           }}
           onLoad={(map) => setMap(map)}
         >
+          {/* Markers */}
+
           {markers.map((marker, index) => (
             <Marker
               position={{
@@ -117,9 +141,33 @@ function App() {
                 lng: marker.lng,
               }}
               onClick={handleMarkerClick(index)}
-            />
+            >
+              {selectedMarker == index && (
+                <InfoWindow
+                  options={{ closeBoxURL: ``, enableEventPropagation: true }}
+                  onCloseClick={() => {
+                    setSelectedMarker(-1);
+                  }}
+                  width="300px"
+                >
+                  <VStack style={{ fontSize: `16px`, fontColor: `#08233B` }}>
+                    <h1>
+                      {marker.lat} {marker.lng}
+                    </h1>
+                    <button
+                      className="button"
+                      onClick={handleAddWaypoint(index)}
+                    >
+                      Add to path
+                    </button>
+                  </VStack>
+                </InfoWindow>
+              )}
+            </Marker>
           ))}
-          <Marker position={center} />
+
+          {/* Popup */}
+
           {directionsResponse && (
             <DirectionsRenderer directions={directionsResponse} />
           )}
@@ -137,52 +185,64 @@ function App() {
         minW={400}
         zIndex="1"
       >
-        <VStack spacing={2} justifyContent="space-between">
-          <Box flexGrow={1}>
-            <Autocomplete>
-              <Input type="text" placeholder="Origin" ref={originRef} />
-            </Autocomplete>
-          </Box>
-          <Box flexGrow={1}>
-            <Autocomplete>
-              <Input
-                type="text"
-                placeholder="Destination"
-                ref={destiantionRef}
-              />
-            </Autocomplete>
-          </Box>
-          <Box flexGrow={1}>
-            <Input type="text" placeholder="Adjective" />
-          </Box>
+        <Flex flexDirection="column" gap={100}>
+          <VStack spacing={2} justifyContent="space-between">
+            <Box flexGrow={1}>
+              <Autocomplete>
+                <Input type="text" placeholder="Origin" ref={originRef} />
+              </Autocomplete>
+            </Box>
+            <Box flexGrow={1}>
+              <Autocomplete>
+                <Input
+                  type="text"
+                  placeholder="Destination"
+                  ref={destiantionRef}
+                />
+              </Autocomplete>
+            </Box>
+            <Box flexGrow={1}>
+              <Input type="text" placeholder="Adjective" />
+            </Box>
 
-          <ButtonGroup>
-            <Button colorScheme="pink" type="submit" onClick={calculateRoute}>
-              Calculate Route
-            </Button>
+            <ButtonGroup>
+              <button className="button" onClick={calculateRoute}>
+                Calculate Route
+              </button>
+              <IconButton
+                aria-label="center back"
+                icon={<FaTimes />}
+                onClick={clearRoute}
+              />
+            </ButtonGroup>
+          </VStack>
+          <VStack spacing={4} mt={4} justifyContent="space-between">
+            <Checkbox onChange={(e) => setOptimize(e.target.checked)}>
+              Optimize Route
+            </Checkbox>
+            <Text>Distance: {distance} </Text>
+            <Text>Duration: {duration} </Text>
             <IconButton
               aria-label="center back"
-              icon={<FaTimes />}
-              onClick={clearRoute}
+              icon={<FaLocationArrow />}
+              isRound
+              onClick={() => {
+                map.panTo(center);
+                map.setZoom(15);
+              }}
             />
-          </ButtonGroup>
-        </VStack>
-        <VStack spacing={4} mt={4} justifyContent="space-between">
-          <Checkbox onChange={(e) => setOptimize(e.target.checked)}>
-            Optimize Route
-          </Checkbox>
-          <Text>Distance: {distance} </Text>
-          <Text>Duration: {duration} </Text>
-          <IconButton
-            aria-label="center back"
-            icon={<FaLocationArrow />}
-            isRound
-            onClick={() => {
-              map.panTo(center);
-              map.setZoom(15);
-            }}
-          />
-        </VStack>
+          </VStack>
+          <VStack>
+            {waypoints.map((waypoint, index) => (
+              <div>
+                <h1>
+                  {waypoint.lat} {waypoint.lng} {index}
+                </h1>
+                <button onClick={handleRemoveWaypoint(index)}>Remove</button>
+              </div>
+            ))}
+          </VStack>
+        </Flex>
       </Box>
     </Flex>
   );
