@@ -22,9 +22,9 @@ import {
   DirectionsRenderer,
   InfoWindow,
 } from "@react-google-maps/api";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
-const center = { lat: 48.8584, lng: 2.2945 };
+const center = { lat: 42.35525556385052, lng: -71.09141481361783 };
 
 function App() {
   //const [markers, setMarker] = useState([])
@@ -40,11 +40,9 @@ function App() {
   const [duration, setDuration] = useState("");
   const [waypoints, setWaypoints] = useState([]);
   const [optimize, setOptimize] = useState(true);
-  const [markers, setMarkers] = useState([
-    { lat: 48.8605, lng: 2.2945 },
-    { lat: 48.8595, lng: 2.2945 },
-  ]);
+  const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(-1);
+  const [addMarker, setAddMarker] = useState(false);
 
   /** @type React.MutableRefObject<HTMLInputElement> */
   const originRef = useRef();
@@ -52,6 +50,30 @@ function App() {
   const destinationRef = useRef();
   /** @type React.MutableRefObject<HTMLInputElement> */
   const adjectiveRef = useRef();
+
+  useEffect(() => {
+    const fd = async () => {
+      // eslint-disable-next-line no-undef
+      const directionsService = new google.maps.DirectionsService();
+      const results = await directionsService.route({
+        origin: originRef.current.value,
+        destination: destinationRef.current.value,
+        waypoints: waypoints.map((waypoint) => ({
+          location: waypoint,
+          stopover: true,
+        })),
+        optimizeWaypoints: optimize,
+        // eslint-disable-next-line no-undef
+        travelMode: google.maps.TravelMode.DRIVING,
+      });
+      setDirectionsResponse(results);
+      setDistance(results.routes[0].legs[0].distance.text); // TODO: sum all legs
+      setDuration(results.routes[0].legs[0].duration.text); // TODO: sum all legs
+    };
+
+    fd().catch(console.error);
+    console.log("hi");
+  }, [waypoints]);
 
   if (!isLoaded) {
     return <SkeletonText />;
@@ -157,8 +179,21 @@ function App() {
       var arr = [...waypoints];
       arr.splice(index, 1);
       setWaypoints(arr);
+      setSelectedMarker(-1);
     };
   }
+
+  const onMapClick = (e) => {
+    if (addMarker) {
+      setMarkers((current) => [
+        ...current,
+        {
+          lat: e.latLng.lat(),
+          lng: e.latLng.lng(),
+        },
+      ]);
+    }
+  };
 
   return (
     <Flex
@@ -181,6 +216,7 @@ function App() {
             fullscreenControl: false,
           }}
           onLoad={(map) => setMap(map)}
+          onClick={onMapClick}
         >
           {markers.map((marker, index) => (
             <Marker
@@ -271,6 +307,9 @@ function App() {
               >
                 Optimize Route
               </Checkbox>
+              <Checkbox onChange={(e) => setAddMarker(e.target.checked)}>
+                Add Marker
+              </Checkbox>
               <Text>Distance: {distance} </Text>
               <Text>Duration: {duration} </Text>
               <IconButton
@@ -284,6 +323,11 @@ function App() {
               />
             </VStack>
             <VStack>
+              {true && (
+                <div>
+                  <h1>start</h1>
+                </div>
+              )}
               {waypoints.map((waypoint, index) => (
                 <div>
                   <h1>
@@ -292,6 +336,11 @@ function App() {
                   <button onClick={handleRemoveWaypoint(index)}>Remove</button>
                 </div>
               ))}
+              {true && (
+                <div>
+                  <h1>end</h1>
+                </div>
+              )}
             </VStack>
           </Flex>
         </Box>
