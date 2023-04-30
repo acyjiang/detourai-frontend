@@ -16,3 +16,8 @@
 .button:hover {
   background-color: #ff1493;
 }
+
+.resizable {
+  resize: both;
+  overflow: auto;
+}

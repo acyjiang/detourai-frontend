@@ -220,95 +220,82 @@ function App() {
           )}
         </GoogleMap>
       </Box>
-      <Box
-        position="absolute"
-        left={0}
-        top={0}
-        h="100%"
-        p={4}
-        borderRadius="lg"
-        bgColor="white"
-        shadow="base"
-        minW={200}
-        zIndex="1"
-      >
-        <Flex flexDirection="column" gap={100}>
-          <VStack spacing={2} justifyContent="space-between">
-            <Box flexGrow={1}>
-              <Autocomplete>
-                <Input type="text" placeholder="Origin" ref={originRef} />
-              </Autocomplete>
-            </Box>
-            <Box flexGrow={1}>
-              <Autocomplete>
-                <Input
-                  type="text"
-                  placeholder="Destination"
-                  ref={destiantionRef}
-                />
-              </Autocomplete>
-            </Box>
-            <Box flexGrow={1}>
-              <Input type="text" placeholder="Adjective" ref={adjectiveRef} />
-            </Box>
+      <div className="resizable">
+        <Box
+          position="absolute"
+          left={0}
+          top={0}
+          h="100%"
+          p={4}
+          borderRadius="lg"
+          bgColor="white"
+          shadow="base"
+          minW={200}
+          zIndex="1"
+        >
+          <Flex flexDirection="column" gap={100}>
+            <VStack spacing={2} justifyContent="space-between">
+              <Box flexGrow={1}>
+                <Autocomplete>
+                  <Input type="text" placeholder="Origin" ref={originRef} />
+                </Autocomplete>
+              </Box>
+              <Box flexGrow={1}>
+                <Autocomplete>
+                  <Input
+                    type="text"
+                    placeholder="Destination"
+                    ref={destinationRef}
+                  />
+                </Autocomplete>
+              </Box>
+              <Box flexGrow={1}>
+                <Input type="text" placeholder="Adjective" ref={adjectiveRef} />
+              </Box>
 
-            <ButtonGroup>
-              <button className="button" onClick={calculateRoute}>
-                Calculate Route
-              </button>
+              <ButtonGroup>
+                <button className="button" onClick={calculateRoute}>
+                  Calculate Route
+                </button>
+                <IconButton
+                  aria-label="center back"
+                  icon={<FaTimes />}
+                  onClick={clearRoute}
+                />
+              </ButtonGroup>
+            </VStack>
+            <VStack spacing={4} mt={4} justifyContent="space-between">
+              <Checkbox
+                defaultChecked
+                onChange={(e) => setOptimize(e.target.checked)}
+              >
+                Optimize Route
+              </Checkbox>
+              <Text>Distance: {distance} </Text>
+              <Text>Duration: {duration} </Text>
               <IconButton
                 aria-label="center back"
-                icon={<FaTimes />}
-                onClick={clearRoute}
+                icon={<FaLocationArrow />}
+                isRound
+                onClick={() => {
+                  map.panTo(center);
+                  map.setZoom(15);
+                }}
               />
-            </ButtonGroup>
-          </VStack>
-          <VStack spacing={4} mt={4} justifyContent="space-between">
-            <Checkbox onChange={(e) => setOptimize(e.target.checked)}>
-              Optimize Route
-            </Checkbox>
-            <Text>Distance: {distance} </Text>
-            <Text>Duration: {duration} </Text>
-            <IconButton
-              aria-label="center back"
-              icon={<FaLocationArrow />}
-              isRound
-              onClick={() => {
-                map.panTo(center);
-                map.setZoom(15);
-              }}
-            />
-          </ButtonGroup>
-        </VStack>
-        <VStack spacing={4} mt={4} justifyContent="space-between">
-          <Checkbox onChange={(e) => setOptimize(e.target.checked)}>
-            Optimize Route
-          </Checkbox>
-          <Text>Distance: {distance} </Text>
-          <Text>Duration: {duration} </Text>
-          {/* <IconButton
-            aria-label="center back"
-            icon={<FaLocationArrow />}
-            isRound
-            onClick={() => {
-              map.panTo(center);
-              map.setZoom(15);
-            }}
-          /> */}
-        </VStack>
-          </VStack>
-          <VStack>
-            {waypoints.map((waypoint, index) => (
-              <div>
-                <h1>
-                  {waypoint.lat} {waypoint.lng} {index}
-                </h1>
-                <button onClick={handleRemoveWaypoint(index)}>Remove</button>
-              </div>
-            ))}
-          </VStack>
-        </Flex>
-      </Box>
+            </VStack>
+            <VStack>
+              {waypoints.map((waypoint, index) => (
+                <div>
+                  <h1>
+                    {waypoint.lat} {waypoint.lng} {index}
+                  </h1>
+                  <button onClick={handleRemoveWaypoint(index)}>Remove</button>
+                </div>
+              ))}
+            </VStack>
+          </Flex>
+        </Box>
+      </div>
     </Flex>
   );
 }
