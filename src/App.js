@@ -9,6 +9,11 @@ import {
   VStack,
   IconButton,
   Input,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
   SkeletonText,
   Text,
 } from "@chakra-ui/react";
@@ -36,8 +41,6 @@ function App() {
 
   const [map, setMap] = useState(/** @type google.maps.Map */ (null));
   const [directionsResponse, setDirectionsResponse] = useState(null);
-  const [distance, setDistance] = useState("");
-  const [duration, setDuration] = useState("");
   const [waypoints, setWaypoints] = useState([]);
   const [optimize, setOptimize] = useState(true);
   const [markers, setMarkers] = useState([
@@ -45,6 +48,9 @@ function App() {
     { lat: 48.8595, lng: 2.2945 },
   ]);
   const [selectedMarker, setSelectedMarker] = useState(-1);
+  const [originId, setOriginId] = useState("");
+  const [destinationId, setDestinationId] = useState("");
+  const [targetCount, setTargetCount] = useState(3);
 
   /** @type React.MutableRefObject<HTMLInputElement> */
   const originRef = useRef();
@@ -87,27 +93,18 @@ function App() {
       return;
     }
 
-    // // eslint-disable-next-line no-undef
-    // const autocomplete = new google.maps.places.Autocomplete(
-    //   originRef.current.value,
-    //   {
-    //     fields: ["place_id"],
-    //   }
-    // );
-    // console.log(autocomplete.getPlace());
-
     const url = "https://detour-ai-mit.uk.r.appspot.com";
     const queryParams = {
       key: "beaver",
-      origin: "ChIJh2oa9apw44kRPCAIs6WO4NA",
-      destination: "ChIJLw8wo4Vw44kRWkWR0c03LH4",
+      origin: originId,
+      destination: destinationId,
       keyword: adjectiveRef.current.value,
       modelWeight: 20,
       distanceWeight: 0,
       popularityWeight: 10,
-      targetCount: 3,
+      targetCount: targetCount,
     };
-
+    console.log(queryParams);
     const newWaypoints = await fetchData(url, queryParams);
     // eslint-disable-next-line no-undef
     const directionsService = new google.maps.DirectionsService();
@@ -123,14 +120,11 @@ function App() {
       travelMode: google.maps.TravelMode.DRIVING,
     });
     setDirectionsResponse(results);
-    setDistance(results.routes[0].legs[0].distance.text); // TODO: sum all legs
-    setDuration(results.routes[0].legs[0].duration.text); // TODO: sum all legs
+    console.log(results);
   }
 
   function clearRoute() {
     setDirectionsResponse(null);
-    setDistance("");
-    setDuration("");
     setWaypoints([]);
     originRef.current.value = "";
     destinationRef.current.value = "";
@@ -159,6 +153,28 @@ function App() {
       setWaypoints(arr);
     };
   }
+
+  const handleAutoCompleteOrigin = (autocomplete) => {
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+
+      // This is the complete response from Autocomplete
+      setOriginId(place.place_id);
+    });
+  };
+
+  const handleAutoCompleteDestination = (autocomplete) => {
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+
+      // This is the complete response from Autocomplete
+      setDestinationId(place.place_id);
+    });
+  };
+
+  const handleStopsChange = (valueAsString, valueAsNumber) => {
+    setTargetCount(valueAsNumber);
+  };
 
   return (
     <Flex
@@ -236,12 +252,20 @@ function App() {
           <Flex flexDirection="column" gap={100}>
             <VStack spacing={2} justifyContent="space-between">
               <Box flexGrow={1}>
-                <Autocomplete>
+                <Autocomplete
+                  onLoad={(autocomplete) =>
+                    handleAutoCompleteOrigin(autocomplete)
+                  }
+                >
                   <Input type="text" placeholder="Origin" ref={originRef} />
                 </Autocomplete>
               </Box>
               <Box flexGrow={1}>
-                <Autocomplete>
+                <Autocomplete
+                  onLoad={(autocomplete) =>
+                    handleAutoCompleteDestination(autocomplete)
+                  }
+                >
                   <Input
                     type="text"
                     placeholder="Destination"
@@ -252,7 +276,27 @@ function App() {
               <Box flexGrow={1}>
                 <Input type="text" placeholder="Adjective" ref={adjectiveRef} />
               </Box>
-
+              <Text>Number of stops:</Text>
+              <Box flexGrow={1}>
+                <NumberInput
+                  defaultValue={3}
+                  min={1}
+                  onChange={handleStopsChange}
+                  value={targetCount}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </Box>
+              <Checkbox
+                defaultChecked
+                onChange={(e) => setOptimize(e.target.checked)}
+              >
+                Optimize Route
+              </Checkbox>
               <ButtonGroup>
                 <button className="button" onClick={calculateRoute}>
                   Calculate Route
@@ -264,25 +308,95 @@ function App() {
                 />
               </ButtonGroup>
             </VStack>
-            <VStack spacing={4} mt={4} justifyContent="space-between">
-              <Checkbox
-                defaultChecked
-                onChange={(e) => setOptimize(e.target.checked)}
-              >
-                Optimize Route
-              </Checkbox>
-              <Text>Distance: {distance} </Text>
-              <Text>Duration: {duration} </Text>
-              <IconButton
-                aria-label="center back"
-                icon={<FaLocationArrow />}
-                isRound
-                onClick={() => {
-                  map.panTo(center);
-                  map.setZoom(15);
-                }}
-              />
-            </VStack>
+            {directionsResponse ? (
+              <VStack spacing={2} justifyContent="space-between">
+                <Box
+                  width="100%"
+                  left={0}
+                  top={0}
+                  p={4}
+                  borderRadius="lg"
+                  bgColor="white"
+                  shadow="base"
+                  minW={200}
+                  zIndex="1"
+                  textAlign="center"
+                >
+                  <Text>{originRef.current.value}</Text>
+                </Box>
+                {waypoints.map((waypoint, i) => (
+                  <>
+                    <Box
+                      width="100%"
+                      p={4}
+                      borderLeftWidth="1px"
+                      borderLeftStyle="solid"
+                      borderLeftColor="black"
+                    >
+                      <Text>
+                        {directionsResponse.routes[0].legs[i].distance.text}
+                      </Text>
+                      <Text>
+                        {directionsResponse.routes[0].legs[i].duration.text}
+                      </Text>
+                    </Box>
+                    <Box
+                      width="100%"
+                      left={0}
+                      top={0}
+                      p={4}
+                      borderRadius="lg"
+                      bgColor="white"
+                      shadow="base"
+                      minW={200}
+                      zIndex="1"
+                      textAlign="center"
+                    >
+                      <Text>{waypoint}</Text>
+                    </Box>
+                  </>
+                ))}
+                <Box
+                  width="100%"
+                  p={4}
+                  borderLeftWidth="1px"
+                  borderLeftStyle="solid"
+                  borderLeftColor="black"
+                >
+                  <Text>
+                    {directionsResponse.routes[0].legs.at(-1).distance.text}
+                  </Text>
+                  <Text>
+                    {directionsResponse.routes[0].legs.at(-1).duration.text}
+                  </Text>
+                </Box>
+                <Box
+                  width="100%"
+                  left={0}
+                  top={0}
+                  p={4}
+                  borderRadius="lg"
+                  bgColor="white"
+                  shadow="base"
+                  minW={200}
+                  zIndex="1"
+                  textAlign="center"
+                >
+                  <Text>{destinationRef.current.value}</Text>
+                </Box>
+                <IconButton
+                  aria-label="center back"
+                  icon={<FaLocationArrow />}
+                  isRound
+                  onClick={() => {
+                    map.panTo(center);
+                    map.setZoom(15);
+                  }}
+                />
+              </VStack>
+            ) : (
+              <></>
+            )}
             <VStack>
               {waypoints.map((waypoint, index) => (
                 <div>
