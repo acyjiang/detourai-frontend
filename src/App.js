@@ -48,6 +48,7 @@ import {
   DirectionsRenderer,
   InfoWindow,
 } from "@react-google-maps/api";
+import axios from "axios";
 import { useRef, useState, useEffect } from "react";
 
 const center = { lat: 42.35525556385052, lng: -71.09141481361783 };
@@ -119,19 +120,23 @@ function App() {
     try {
       const urlObject = new URL(url);
       urlObject.search = new URLSearchParams(queryParams).toString();
-      console.log("url", urlObject.toString());
       const response = await fetch(urlObject.toString());
+
+      console.log("Response:", response);
 
       if (!response.ok) {
         setIsLoading(false);
         setError(true);
-        throw new Error(`An error occurred: ${response.statusText}`);
+        throw new Error(
+          `Error requesting from backend: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
       console.log("Fetched data:", data);
 
       const newWaypoints = data.results.map((result) => result.name);
+      console.log("New waypoints:", newWaypoints);
       setWaypoints(newWaypoints);
       return newWaypoints;
     } catch (error) {
@@ -165,6 +170,7 @@ function App() {
     };
     console.log("Requesting detour with params:", queryParams);
     const newWaypoints = await fetchData(url, queryParams);
+    console.log("Got waypoints:", newWaypoints);
     // eslint-disable-next-line no-undef
     const directionsService = new google.maps.DirectionsService();
     const results = await directionsService.route({
@@ -178,11 +184,13 @@ function App() {
       // eslint-disable-next-line no-undef
       travelMode: google.maps.TravelMode.DRIVING,
     });
+
+    console.log("Route results", results);
+
     setOriginRoute(origin);
     setDestinationRoute(destination);
     setDirectionsResponse(results);
     setIsLoading(false);
-    console.log("Route results", results);
   }
 
   function handleMarkerClick(index) {
