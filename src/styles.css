@@ -1,5 +1,5 @@
 .button {
-  background-color: #ff69b4; /* Set background color */
+  background-color: #1a659e; /* Set background color */
   border: none; /* Remove borders */
   color: white; /* Set text color */
   padding: 10px 20px; /* Set padding */
@@ -8,13 +8,12 @@
   display: inline-block; /* Set display to inline block */
   font-size: 16px; /* Set font size */
   cursor: pointer; /* Change cursor to pointer on hover */
-  border-radius: 5px; /* Add border radius */
-  transition: background-color 0.3s ease; /* Add transition */
+  transition: background-color 0.2s ease; /* Add transition */
 }
 
 /* Hover state */
 .button:hover {
-  background-color: #ff1493;
+  background-color: #004e89;
 }
 
 .resizable {
