@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/acyjiang.github.io/detourai-frontend/static/css/main.88de0930.css",
+    "main.js": "/acyjiang.github.io/detourai-frontend/static/js/main.c9531b05.js",
+    "index.html": "/acyjiang.github.io/detourai-frontend/index.html",
+    "main.88de0930.css.map": "/acyjiang.github.io/detourai-frontend/static/css/main.88de0930.css.map",
+    "main.c9531b05.js.map": "/acyjiang.github.io/detourai-frontend/static/js/main.c9531b05.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.88de0930.css",
+    "static/js/main.c9531b05.js"
+  ]
+}
