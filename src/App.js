@@ -156,7 +156,7 @@ function App() {
     setAlert(false);
     setError(false);
     setIsLoading(true);
-    const url = "https://detour-ai-mit.uk.r.appspot.com";
+    const url = "https://plated-mantra-385005.uk.r.appspot.com"; // "https://detour-ai-mit.uk.r.appspot.com";
     const queryParams = {
       key: "beaver",
       origin: origin.place_id,
